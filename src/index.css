@@ -1,0 +1,169 @@
+/**
+ * ArcVault Design System
+ *
+ * Built for a dark-mode-first crypto marketplace aesthetic.
+ * Color palette: deep navy/black backgrounds with purple (#7c3aed range)
+ * as the primary accent, inspired by Arcium's brand identity.
+ *
+ * Custom utilities (glass, glow, dot-pattern, gradients) are used
+ * throughout components to maintain visual consistency without
+ * repeating raw CSS values. Semantic tokens ensure we can theme
+ * the entire app by changing values here.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 15% 3%;
+    --foreground: 0 0% 95%;
+
+    --card: 240 12% 7%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 240 12% 7%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 265 90% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 10% 12%;
+    --secondary-foreground: 0 0% 85%;
+
+    --muted: 240 8% 14%;
+    --muted-foreground: 240 5% 55%;
+
+    --accent: 265 80% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 265 30% 18%;
+    --input: 240 10% 15%;
+    --ring: 265 90% 60%;
+
+    --radius: 0.75rem;
+
+    /* Extended palette for crypto/privacy UI elements */
+    --glow: 265 100% 65%;
+    --surface: 240 12% 9%;
+    --surface-hover: 240 12% 12%;
+    --cyber-green: 160 100% 50%;
+    --neon-blue: 220 100% 65%;
+
+    --sidebar-background: 240 12% 5%;
+    --sidebar-foreground: 0 0% 90%;
+    --sidebar-primary: 265 90% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 10% 12%;
+    --sidebar-accent-foreground: 0 0% 90%;
+    --sidebar-border: 265 30% 18%;
+    --sidebar-ring: 265 90% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+/* ─── Custom Utilities ───────────────────────────────────────────── */
+
+@layer utilities {
+  /* Glassmorphism — used for cards, nav, modals throughout the app */
+  .glass {
+    @apply bg-card/60 backdrop-blur-xl border border-border/50;
+  }
+
+  .glass-hover {
+    @apply hover:bg-card/80 hover:border-primary/30 transition-all duration-300;
+  }
+
+  /* Glow effects — subtle purple halo for primary actions and highlights */
+  .glow-text {
+    text-shadow: 0 0 20px hsl(265 90% 60% / 0.5), 0 0 40px hsl(265 90% 60% / 0.2);
+  }
+
+  .glow-box {
+    box-shadow: 0 0 30px hsl(265 90% 60% / 0.15), 0 0 60px hsl(265 90% 60% / 0.05), inset 0 1px 0 hsl(0 0% 100% / 0.05);
+  }
+
+  /* Gradient border — CSS mask trick for animated-looking borders */
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(135deg, hsl(265 90% 60% / 0.5), transparent 50%, hsl(265 90% 60% / 0.2));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Dot matrix pattern — subtle background texture */
+  .dot-pattern {
+    background-image: radial-gradient(circle, hsl(265 90% 60% / 0.15) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Text gradients */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(0 0% 100%), hsl(265 90% 80%));
+  }
+
+  .text-gradient-purple {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(265 90% 65%), hsl(290 80% 70%));
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out;
+  }
+}
+
+/* ─── Keyframes ──────────────────────────────────────────────────── */
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
