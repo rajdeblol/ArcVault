@@ -1,35 +1,13 @@
 /**
  * DataListings — Browsable grid of encrypted datasets available on the marketplace.
- *
- * Each listing card shows:
- *   - Dataset title and description (public metadata, stored on Arweave)
- *   - Encryption type (reflects the actual MPC/crypto scheme used)
- *   - Buyer count and price in SOL
- *   - "Hot" badge for high-demand datasets
- *
- * The encryption labels map to real Arcium capabilities:
- *   - "AES-256 + MPC" = standard encryption with MPC-based key management
- *   - "MPC + ZK-Proof" = computation with zero-knowledge verification
- *   - "Homomorphic" = fully homomorphic encryption for on-the-fly computation
- *   - "MPC + TEE" = MPC combined with trusted execution environments
- *   - "Full MPC" = pure multi-party computation, no single-party decryption possible
- *
- * In production, listings would be fetched from Solana PDAs via TanStack Query,
- * with metadata resolved from Arweave/IPFS URIs stored on-chain.
  */
 
-import { motion } from "framer-motion";
-import { Shield, Eye, Database, TrendingUp, Clock, Users, Lock, FileText } from "lucide-react";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Shield, Eye, Database, TrendingUp, Users, Lock, FileText, X, Star, ShieldCheck } from "lucide-react";
 
-const categories = [
-  { label: "All", active: true },
-  { label: "DeFi", active: false },
-  { label: "Healthcare", active: false },
-  { label: "Identity", active: false },
-  { label: "Analytics", active: false },
-];
+const categoryLabels = ["All", "DeFi", "Healthcare", "Identity", "Analytics"];
 
-/** Placeholder listings — structure mirrors on-chain listing PDA accounts */
 const listings = [
   {
     title: "DEX Trading Signals",
@@ -99,7 +77,16 @@ const listings = [
   },
 ];
 
+type Listing = typeof listings[number];
+
 const DataListings = () => {
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+
+  const filtered = activeCategory === "All"
+    ? listings
+    : listings.filter((l) => l.category === activeCategory);
+
   return (
     <section id="marketplace" className="py-24 relative">
       <div className="absolute inset-0 dot-pattern opacity-10" />
@@ -119,25 +106,24 @@ const DataListings = () => {
           </p>
         </motion.div>
 
-        {/* Category filter — will be wired to URL params for shareable filtered views */}
         <div className="flex items-center justify-center gap-2 mb-10 flex-wrap">
-          {categories.map((cat) => (
+          {categoryLabels.map((cat) => (
             <button
-              key={cat.label}
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                cat.active
+                activeCategory === cat
                   ? "bg-primary text-primary-foreground glow-box"
                   : "glass glass-hover text-muted-foreground hover:text-foreground"
               }`}
             >
-              {cat.label}
+              {cat}
             </button>
           ))}
         </div>
 
-        {/* Dataset grid — staggered entrance animation for visual polish */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {listings.map((listing, i) => (
+          {filtered.map((listing, i) => (
             <motion.div
               key={listing.title}
               initial={{ opacity: 0, y: 20 }}
@@ -145,6 +131,7 @@ const DataListings = () => {
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
               className="group glass glass-hover rounded-xl p-6 gradient-border cursor-pointer"
+              onClick={() => setSelectedListing(listing)}
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
@@ -164,7 +151,6 @@ const DataListings = () => {
                 {listing.description}
               </p>
 
-              {/* Encryption badge + buyer count — key trust signals for the marketplace */}
               <div className="flex items-center gap-3 mb-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Lock className="w-3 h-3 text-primary" />
@@ -180,7 +166,10 @@ const DataListings = () => {
                 <span className="text-lg font-bold font-mono text-gradient-purple">
                   {listing.price}
                 </span>
-                <button className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setSelectedListing(listing); }}
+                  className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 transition-colors"
+                >
                   View Details
                 </button>
               </div>
@@ -188,6 +177,94 @@ const DataListings = () => {
           ))}
         </div>
       </div>
+
+      {/* Detail Modal */}
+      <AnimatePresence>
+        {selectedListing && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+            onClick={() => setSelectedListing(null)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ duration: 0.2 }}
+              className="glass rounded-2xl p-8 max-w-lg w-full gradient-border relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setSelectedListing(null)}
+                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <selectedListing.icon className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">{selectedListing.title}</h3>
+                  <span className="text-xs text-muted-foreground">{selectedListing.category}</span>
+                </div>
+                {selectedListing.hot && (
+                  <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-cyber-green/10 text-cyber-green border border-cyber-green/20">
+                    Hot
+                  </span>
+                )}
+              </div>
+
+              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                {selectedListing.description}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="glass rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                    <Lock className="w-3 h-3 text-primary" />
+                    Encryption
+                  </div>
+                  <div className="text-sm font-medium text-foreground">{selectedListing.encryption}</div>
+                </div>
+                <div className="glass rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                    <Users className="w-3 h-3" />
+                    Buyers
+                  </div>
+                  <div className="text-sm font-medium text-foreground">{selectedListing.buyers}</div>
+                </div>
+                <div className="glass rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                    <Star className="w-3 h-3 text-yellow-500" />
+                    Rating
+                  </div>
+                  <div className="text-sm font-medium text-foreground">{selectedListing.rating}/5.0</div>
+                </div>
+                <div className="glass rounded-lg p-3">
+                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+                    <ShieldCheck className="w-3 h-3 text-cyber-green" />
+                    Privacy
+                  </div>
+                  <div className="text-sm font-medium text-foreground">Verified</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                <span className="text-2xl font-bold font-mono text-gradient-purple">
+                  {selectedListing.price}
+                </span>
+                <button className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-all glow-box">
+                  Purchase Dataset
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 };
